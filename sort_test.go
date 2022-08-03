@@ -2,12 +2,36 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
 
 func TestSort(t *testing.T) {
+
+	sigs := make(chan os.Signal, 1)
+	defer close(sigs)
+	done := make(chan bool, 1)
+	defer close(done)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func(sigs <-chan os.Signal, done <-chan bool) {
+		fmt.Println("Signal routine is running")
+		for {
+			select {
+			case s := <-sigs:
+				fmt.Println("Signal:", s)
+				return
+			case <-done:
+				fmt.Println("Done")
+				return
+			}
+		}
+	}(sigs, done)
+
 	tt := time.Now()
 	fmt.Printf(" >>> Running TestSort: %s\n", tt.Format(time.ANSIC))
 	fmt.Println(strings.Repeat("-", 50))
@@ -38,7 +62,7 @@ func TestSort(t *testing.T) {
 	if rs != string("5, 4, 3, 2, 1") {
 		t.Errorf("Incorrect reverse sequence: %s", r)
 	}
-
+	done <- true
 	fmt.Printf("%s\n", r)
 	fmt.Println(strings.Repeat("-", 50))
 }
