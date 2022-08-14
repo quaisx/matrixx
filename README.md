@@ -14,7 +14,7 @@ graph TD;
 
 Reverse it to D->C->B->A;
 
-```mrmaid
+```mermaid
 graph TD;
   D-->C;
   C-->B;
